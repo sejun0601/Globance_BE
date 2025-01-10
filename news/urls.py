@@ -1,8 +1,7 @@
 # news/urls.py
 from django.urls import path
-from .views import news_by_category, news_geojson
+from .views import ArticlesGeoJSON
 
 urlpatterns = [
-    path('<str:category>/', news_by_category, name='news_by_category'),
-    path('geojson/<str:category>/', news_geojson, name='news_geojson'),
+    path('news_geojson/', ArticlesGeoJSON.as_view(), name='articles_geojson'),
 ]

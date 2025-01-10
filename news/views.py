@@ -1,24 +1,43 @@
 # news/views.py
-from django.shortcuts import render
-from newsapi import NewsApiClient
-from django.http import JsonResponse
-from .utils import fetch_articles, articles_to_geojson
+from .models import NewsArticle
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
-# NewsApiClient 초기화 (개인 API 키 사용)
-newsapi = NewsApiClient(api_key='0acf8c4d915b4f04ae2477cbe171113a')
 
-def news_by_category(request, category):
-    # NewsAPI에서 카테고리별 헤드라인 가져오기
-    top_headlines = newsapi.get_top_headlines(category=category, country='us', language='en')
-    articles = top_headlines.get('articles', [])
+# news/views.py
 
-    context = {
-        'category': category,
-        'articles': articles,
-    }
-    return render(request, '../templates/news_list.html', context)
+class ArticlesGeoJSON(APIView):
+    def get(self, request):
+        category = request.GET.get('category')
+        if category:
+            if category not in dict(NewsArticle.CATEGORY_CHOICES):
+                return Response({'error': 'Invalid category'}, status=400)
+            articles = NewsArticle.objects.filter(category=category, latitude__isnull=False, longitude__isnull=False)
+        else:
+            articles = NewsArticle.objects.exclude(latitude__isnull=True, longitude__isnull=True)
 
-def news_geojson(request, category='general'):
-    articles = fetch_articles(category=category)
-    geojson_data = articles_to_geojson(articles)
-    return JsonResponse(geojson_data)
+        features = []
+        for article in articles:
+            feature = {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [article.longitude, article.latitude]
+                },
+                "properties": {
+                    "title": article.title,
+                    "description": article.description,
+                    "url": article.url,
+                    "published_at": article.published_at.isoformat() if article.published_at else None,
+                    "summary": article.summary,
+                    "importance": article.importance,
+                    "category": article.category
+                }
+            }
+            features.append(feature)
+
+        return Response({
+            "type": "FeatureCollection",
+            "features": features
+        })
+
