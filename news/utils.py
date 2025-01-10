@@ -5,10 +5,11 @@ import spacy
 from geopy.geocoders import Nominatim
 from .models import NewsArticle
 from django.utils.dateparse import parse_datetime
+from django.conf import settings
 import time
 
 # 초기화
-newsapi = NewsApiClient(api_key='0acf8c4d915b4f04ae2477cbe171113a')
+newsapi = NewsApiClient(api_key=settings.NEWS_API_KEY)
 nlp = spacy.load('en_core_web_sm')
 geolocator = Nominatim(user_agent="news_geo_locator")
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")

@@ -11,16 +11,37 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+import json
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+# secret.json 파일 읽기
+with open(os.path.join(BASE_DIR, 'secrets.json')) as f:
+    secrets = json.load(f)
+
+def get_secret(setting, secrets=secrets):
+    """
+    secret.json에서 설정 값을 가져오거나,
+    해당 값이 없을 경우 오류 발생
+    """
+    try:
+        return secrets[setting]
+    except KeyError:
+        error_msg = f"Set the {setting} setting in secret.json"
+        raise ImproperlyConfigured(error_msg)
+
+# 비밀 값 로드
+NEWS_API_KEY = get_secret("NEWSAPI_KEY")
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-@o=$ccsy+bo7y3%bam4qei1g+m!)6b+hjue42mec6-q73by+3='
+SECRET_KEY = get_secret("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
