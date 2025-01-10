@@ -39,7 +39,20 @@ def extract_location(text):
 def compute_importance(article_text):
     """기사 텍스트로부터 요약과 중요도 계산"""
     try:
-        summary_result = summarizer(article_text, max_length=150, min_length=40, do_sample=False)
+        # 입력 텍스트의 단어 수 확인
+        input_length = len(article_text.split())
+
+        # max_length를 입력 텍스트 길이에 따라 조정
+        max_length = min(150, int(input_length * 0.8))  # 입력 길이의 80%로 제한
+        min_length = max(40, int(input_length * 0.2))  # 입력 길이의 20%로 제한
+
+        # 요약 생성
+        summary_result = summarizer(
+            article_text,
+            max_length=max_length,
+            min_length=min_length,
+            do_sample=False
+        )
         summary = summary_result[0]['summary_text']
     except Exception as e:
         print("요약 생성 중 오류 발생:", e)
