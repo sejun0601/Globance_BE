@@ -2,10 +2,6 @@
 from .models import NewsArticle
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.db.models import Subquery
-
-
-# news/views.py
 
 class ArticlesGeoJSON(APIView):
     def get(self, request):
@@ -29,28 +25,24 @@ class ArticlesGeoJSON(APIView):
         except ValueError:
             limit = 30
 
-        # --- 핵심 변경점 ---
-        # 각 카테고리마다 "최신순(limit만큼)"으로 우선 추출 -> 그 후 "중요도 순으로" 재정렬.
         all_articles = []
         for cat in valid_requested:
             # 1) 해당 카테고리의 좌표가 있는 기사 중, 최신순으로 limit 개
-            cat_articles = (NewsArticle.objects
-                            .filter(
-                                category=cat,
-                                latitude__isnull=False,
-                                longitude__isnull=False
-                            )
-                            .order_by("-published_at")[:limit])
+            cat_articles = (
+                NewsArticle.objects
+                .filter(
+                    category=cat,
+                    latitude__isnull=False,
+                    longitude__isnull=False
+                )
+                .order_by("-published_at")[:limit]
+            )
 
-            # 2) 위에서 뽑은 기사들을 중요도 순으로 다시 정렬 (파이썬 정렬 사용)
-            #    (쿼리셋 슬라이싱 후에는 파이썬 list로 다루게 되므로 sorted() 사용 가능)
+            # 2) 가져온 기사들을 중요도 순으로 정렬
             cat_articles = sorted(cat_articles, key=lambda x: x.importance, reverse=True)
 
-            # 3) 최종 리스트에 추가
+            # 3) 리스트에 추가
             all_articles.extend(cat_articles)
-
-        # 이제 all_articles에는 "카테고리별로 최신순->중요도순" 정렬된 기사들이 모두 들어 있음
-        # (카테고리 순서대로 합쳐져 있음)
 
         # GeoJSON 결과 생성
         features = []
@@ -70,7 +62,12 @@ class ArticlesGeoJSON(APIView):
                     ),
                     "summary": article.summary,
                     "importance": article.importance,
-                    "category": article.category
+                    "category": article.category,
+                    
+                    # 프리뷰 관련 필드를 함께 포함 (이미 NewsArticle 모델에 존재한다고 가정)
+                    "preview_title": article.preview_title,
+                    "preview_description": article.preview_description,
+                    "preview_image": article.preview_image,
                 }
             }
             features.append(feature)

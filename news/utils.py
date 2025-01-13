@@ -9,6 +9,7 @@ import torch
 print("CUDA Available:", torch.cuda.is_available())
 
 from geoparser import Geoparser
+from .preview_utils import fetch_url_preview
 
 # Geoparser 초기화 (모델 로드 등)
 geo = Geoparser()
@@ -95,6 +96,17 @@ def fetch_and_store_top_headlines(language='en', page_size=100):
             lat, lon = extract_location(full_text)
             summary, importance = compute_importance(full_text) if full_text else ("", 0)
 
+            # 새로 추가된 부분: 프리뷰 데이터 가져오기
+            preview_data = fetch_url_preview(url)  # dict 또는 None
+            if preview_data:
+                preview_title = preview_data.get("title", "")
+                preview_description = preview_data.get("description", "")
+                preview_image = preview_data.get("image", "")
+            else:
+                preview_title = ""
+                preview_description = ""
+                preview_image = ""
+
             NewsArticle.objects.create(
                 title=title,
                 description=description,
@@ -104,5 +116,9 @@ def fetch_and_store_top_headlines(language='en', page_size=100):
                 importance=importance,
                 latitude=lat,
                 longitude=lon,
-                category=category
+                category=category,
+                # 새 필드들
+                preview_title=preview_title,
+                preview_description=preview_description,
+                preview_image=preview_image
             )

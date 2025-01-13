@@ -21,6 +21,11 @@ class NewsArticle(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    
+    # 새로 추가: URL 프리뷰 관련 필드
+    preview_title = models.CharField(max_length=255, blank=True)
+    preview_description = models.TextField(blank=True)
+    preview_image = models.URLField(max_length=500, blank=True)
 
     def __str__(self):
         return f"{self.title} ({self.category})"
