@@ -2,6 +2,8 @@
 from .models import NewsArticle
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from datetime import timedelta
+from django.utils import timezone
 
 class ArticlesGeoJSON(APIView):
     def get(self, request):
@@ -75,4 +77,40 @@ class ArticlesGeoJSON(APIView):
         return Response({
             "type": "FeatureCollection",
             "features": features
+        })
+
+class WeeklyTopSummaries(APIView):
+    """
+    지난 7일 안에 있었던 뉴스 중,
+    중요도가 높은 순으로 최대 'limit'개의 뉴스 요약을
+    모두 합쳐서 반환하는 뷰.
+    """
+    def get(self, request):
+        # 1) "7일 전" 시점 계산
+        one_week_ago = timezone.now() - timedelta(days=7)
+
+        # 2) 쿼리 파라미터로부터 limit 값을 가져오고, 기본값은 10
+        limit_str = request.GET.get('limit', '3')
+        try:
+            limit = int(limit_str)
+        except ValueError:
+            limit = 10
+
+        # 3) 지난 7일간 발행된 기사 중 중요도 높은 순으로 limit 개
+        top_articles = (
+            NewsArticle.objects
+            .filter(published_at__gte=one_week_ago)
+            .order_by('-importance')[:limit]
+        )
+
+        # 4) 각 기사(summary 필드)의 내용을 모두 합치기
+        #    원하는 구분자(\n, \n\n 등)로 합쳐서 문자열 생성 가능
+        combined_summaries = "\n\n".join(
+            article.summary for article in top_articles if article.summary
+        )
+
+        # 5) Response 반환
+        return Response({
+            "combined_summaries": combined_summaries,
+            "limit": limit,
         })
