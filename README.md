@@ -18,8 +18,12 @@
 
 ### Base Url (GET)
 ```
-GET http://{server ip address}/api/news/news_geojson/
+GET http://{server ip address}/api/news/
 ```
+
+### - NEWs Geojson Data 
+    news_geojson/
+
 ### parameters
 
 limit = 정수
@@ -36,6 +40,11 @@ category =
 
 (여러 카테고리 가능 : 카테고리가 여러개일때는 각 카테고리가 limit의 수 만큼 반환됨)
 
+### - Weekly News Summary
+    weekly_news/
+
+### parameters
+limit = 정수
 
 
 ## GeoJson Response
@@ -71,4 +80,13 @@ category =
     ]
 }
 
+```
+
+## Weekly News Summary Response
+
+```
+{
+    "combined_summaries": "Alcohol effects may increase with age as brain changes. Alcohol tolerance may not decrease with age, but older adults may experience increased alcohol effects because of changes in brain function and physiology. Some people in their 60s and 70s may notice that their usual glass of red wine with dinner seems to hit them a bit harder than it did in their young…\n\nScientists Reveal New Weight Loss Hack: Drink This Berry Juice Every Day To Burn More Fat - SciTechDaily Elderberry juice may improve metabolism and gut health, as a recent study found it lowers blood sugar and boosts fat burning due to its high anthocyanin content. A recent study led by Washington State University suggests that elderberry Juice may support",
+    "limit": 2
+}
 ```
